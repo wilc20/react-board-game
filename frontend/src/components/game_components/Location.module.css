@@ -1,0 +1,302 @@
+@import url("https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Germania+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+.base {
+  /*     position: absolute;
+    text-align: center;
+    display: block;
+    top: 10px;
+    left: 20px; */
+}
+
+.zone {
+  margin: 0;
+  padding-top: 0.15em;
+  font-weight: bolder;
+  color: aliceblue;
+  font-size: 1.35rem;
+}
+
+.stage7 {
+  position: absolute;
+  background-color: aliceblue;
+  display: block;
+  width: fit-content;
+  padding: 0.05em 0.35em 0em;
+  border-radius: 50%;
+  border: red solid 0.2em;
+  text-transform: uppercase;
+  font-weight: 900;
+  font-size: 1.1em;
+  top: 2.2%;
+  right: 20%;
+}
+
+.stage7::before {
+  position: absolute;
+  content: "";
+  left: 0;
+  top: 45%;
+  right: 0;
+  border-top: 3px solid;
+  border-color: inherit;
+  -webkit-transform: skewY(-15deg);
+  -moz-transform: skewY(-15deg);
+  transform: skewY(-25deg);
+}
+
+.title {
+  background-color: aliceblue;
+  background: radial-gradient(circle, aliceblue 35%, bisque 100%);
+  color: black;
+  margin-top: 0.55rem;
+  text-transform: uppercase;
+  border-radius: 0.25rem;
+  padding: 0.15rem 0 0.1em 0;
+  border: 2px transparent solid;
+  cursor: pointer;
+  z-index: 5;
+  position: absolute;
+  display: inline-block;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  /* width: inherit; */
+  left: -5%;
+  width: 110%;
+  min-height: 1.75rem;
+  text-align: center;
+  /* font-size: 1.1em; */
+  font-size: 105%;
+  letter-spacing: 0.02em;
+}
+
+/* .title h4 {
+    display: block;
+    container-name: titletext;
+    container-type: inline-size;
+}
+
+ */
+.title:hover {
+  border: #000 2px solid;
+}
+
+.title:active {
+  border: aliceblue 1px solid;
+}
+
+.title:disabled {
+  border: 2px transparent solid;
+  pointer-events: none;
+  background: radial-gradient(circle, grey 75%, darkgrey 100%);
+}
+
+.titlePresent:disabled {
+  background: bisque;
+  background: radial-gradient(circle, bisque 9%, darkgoldenrod 100%);
+  /* color: darkgoldenrod; */
+}
+
+.base {
+  --baseWidth: 175px;
+
+  position: absolute;
+  height: var(--baseWidth);
+  width: var(--baseWidth);
+  border-radius: 100%;
+  text-align: center;
+  background-color: var(--base-bg-color);
+  border: var(--base-bg-color) 4px;
+  z-index: 5;
+}
+
+.tier0 {
+  --base-bg-color: #606d4a;
+}
+.tier1 {
+  --base-bg-color: #d34b0c;
+}
+.tier2 {
+  --base-bg-color: #b12727;
+}
+.tier3 {
+  --base-bg-color: #8b1c31;
+}
+.tier4 {
+  --base-bg-color: #4f151e;
+}
+.tier5 {
+  --base-bg-color: #1f1f1f;
+}
+
+.content {
+  position: relative;
+  height: 55%;
+  width: 80%;
+  margin: 0rem auto;
+  margin-top: 0.2em;
+  border-radius: 8px;
+}
+
+.envelope {
+  height: 100%;
+  width: 70%;
+  background: radial-gradient(circle, aliceblue 5%, bisque 100%);
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.envelope:disabled {
+  pointer-events: none;
+}
+
+.result {
+  position: relative;
+  height: 100%;
+  width: 70%;
+  margin: 0;
+  background: #000;
+  color: aliceblue;
+  display: inline-flex;
+  border-radius: 8px;
+  flex-direction: column;
+  justify-content: center;
+  /* padding: 3em 0; */
+}
+
+.result p {
+  display: block;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  margin: 0;
+  /*             line-height: 0.5em;
+            max-height: 1.5em; */
+}
+
+.playerbase {
+  position: absolute;
+  height: var(--baseWidth);
+  width: var(--baseWidth);
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.playerTokens {
+  /*         position: absolute;
+        bottom: -4%;
+        left: 0;
+        list-style-type: none;
+        z-index: 20;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap; 
+        gap: 0.25rem; */
+  position: relative;
+  height: var(--baseWidth);
+  width: var(--baseWidth);
+  background-color: transparent;
+  border: 0.2rem solid rgb(0, 0, 0);
+  border-radius: 100%;
+}
+
+.tokenchild {
+  --miniwidth2: calc(var(--baseWidth) / 8);
+  position: absolute;
+  height: var(--miniwidth2);
+  width: var(--miniwidth2);
+  left: calc(50% - calc(var(--miniwidth2) / 2));
+  top: calc(50% - calc(var(--miniwidth2) / 2));
+list-style: none;
+  transform-origin: center;
+  transform: translateX(
+      calc(sin(var(--degrees)) * calc(var(--baseWidth) / 1.75))
+    )
+    translateY(calc((cos(var(--degrees)) * calc(var(--baseWidth) / 1.75)) * -1));
+}
+
+.tokenchild p {
+    transform: rotateZ(var(--degrees));
+}
+
+.unifrakturcook {
+  font-family: "UnifrakturCook", cursive;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.germaniaOne {
+  font-family: "Germania One", system-ui;
+  font-weight: 400;
+  font-style: normal;
+  filter: none;
+}
+
+.poppins-bold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1.2em;
+}
+
+.line2 {
+  font-size: 1.1em;
+}
+
+.line5 {
+  font-size: 0.9em;
+}
+
+.itemless {
+  font-size: 1.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  height: -webkit-fill-available;
+  color: whitesmoke;
+}
+/* 
+      p + p + p  {
+        font-size: smaller;
+      } */
+/*       .localeItem {
+        position: absolute;
+        right: -50%;
+        top: 0px;
+        z-index: 2;
+      } */
+
+.itemContainer {
+  height: 100%;
+  width: 100%;
+}
+
+.localeItem {
+  position: relative;
+  /* right: -50%; */
+  /* top: 0px; */
+  /* z-index: 2; */
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 7.5em;
+}
+
+.present {
+  /* box-shadow: rgb(161, 3, 3) 0 0 30px 20px; */
+  box-shadow: 0 0 4px black;
+  /*  box-shadow: var(--base-bg-color) 0 0 30px 20px; */
+  /* filter: drop-shadow(0 0 4px black); */
+  /* background-color: brown; */
+}
+
+@container titletext (width > 10px) {
+  .title h4 {
+    background: black;
+  }
+}

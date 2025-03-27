@@ -1,0 +1,13 @@
+.base {
+    --cardwidth: 10em;
+    --cardheight: calc(var(--cardwidth) * 1.4);
+
+    background-color: aliceblue;
+    width: var(--cardwidth);
+    height: var(--cardheight);
+    border:  0.12em solid black;
+    border-radius: 0.25em;
+
+    position: relative;
+    display: inline-block;
+}

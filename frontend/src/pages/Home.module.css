@@ -1,0 +1,141 @@
+.background {
+    background: #444444;
+    min-height: 100vh;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    box-shadow: inset 0px 0px 5vw 4vw rgba(0, 0, 0, 0.43);
+}
+
+.lobby {
+    position: relative;
+    background-color: darkolivegreen;
+    width: 50%;
+    height: 70vh;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.lobby-header {
+    display: flex;
+    justify-content: space-around;
+    padding: 4%;
+    border-bottom: #444444 5px dotted;
+    margin-bottom: 2%;
+}
+
+.lobby-list {
+    text-decoration: none;
+    list-style-type: none;
+    background-color: aliceblue;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 0;
+    height: 60vh;
+    margin-bottom: 10%;
+}
+
+.lobby-entry {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 0;
+    height: 50px;
+    align-items: center;
+    /* gap: 5%; */
+    padding-top: 1%;
+    padding-bottom: 1%;
+    width: 99%;
+   /*  background-color: aqua; */
+}
+
+.lobby-entry-info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0;
+   /*  background-color: aqua; */
+}
+
+@media (max-width: 919px) {
+
+    .lobby {
+        width: 95%;
+        height: 95vh;
+    }
+
+    .lobby ul {
+        min-height: 70vh;
+        max-height: none;
+    }
+
+    .lobby-entry {
+        flex-direction: column;
+        min-height: fit-content;
+    }
+
+    .lobby-entry-info {
+       /*  display: block; */
+    }
+
+}
+
+.lobby-entry-info div {
+    width: 100%;
+    display: block;
+}
+
+.lobby-entry-info div h5 {
+    width: 100%;
+
+}
+
+.lobby-entry:first-of-type {
+    padding-top: 0.5%;
+    /* background-color: brown; */
+}
+
+.lobby-entry:last-of-type {
+    padding-bottom: 0.5%;
+    /* background-color: brown; */
+}
+
+.lobby-entry:nth-child(even){
+    background-color: rgb(66, 83, 37);
+}
+
+.lobby-entry-info div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    gap: 0.5vh;
+    min-height: fit-content;
+}
+
+.lobby-entry-info div h5 {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.lobby-entry h5 {
+    /* max-width: 50%; */
+    /* overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; */
+    /* height: 75%; */
+    margin-left: 2%;
+}
+.lobby-entry button {
+    min-width: 33%;
+    margin-right: 2%;
+}
+
+.create {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2%;
+}

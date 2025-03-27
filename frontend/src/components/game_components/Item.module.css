@@ -1,0 +1,12 @@
+.itemToken {
+    /* width: 90px;
+    height: 90px; */
+    /* width: 100%; */
+}
+
+.itemToken img {
+    width: 100%;
+    box-shadow: 2px 2px rgb(165, 124, 63);
+    border-radius:10px;
+    background-color: #DBE1EC;
+}
