@@ -128,16 +128,16 @@ router.post('/joingame', async (req, res) => {
       "-password"
     ); */
     console.log('gameToJoinResult:',gameToJoin.gameLobby.length);
-    console.log('gamePLayers:', gameToJoin.gameDetails.players.some(player => player.player == req.session.username));
+    console.log('gamePLayers:', gameToJoin.gameDetails.players.some(player => player.name == req.session.username));
 
-    if(gameToJoin.gameDetails.players.some(player => player.player == req.session.username)){
+    if(gameToJoin.gameDetails.players.some(player => player.name == req.session.username)){
       console.log('player found in game');
       res.status(201).send('Joining Game Session!');
     }else if(gameToJoin.gameDetails.players.length < 4){
       let newPlayers = gameToJoin.gameDetails.players.push(
         {
           playerID: req.session.userId,
-          player: req.session.username,
+          name: req.session.username,
           motivation: "timid",
           suspicion: "medium",
           items: [],
@@ -217,6 +217,7 @@ router.post('/joinlobby', async (req, res) => {
     //res.status(500).send(err.message);
   } */
 });
+
 /* router.post('/removegame', async (req, res) => {
   //What if game is deleted while player is in it?
   const { gameId, gameTitle } = req.body;

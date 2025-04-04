@@ -100,8 +100,67 @@ io.use((socket, next) => {
 });
 
 const activeUsers = new Set();
+const gameCache = new Map();
 
-/* const gameStream = Game.watch();
+const detailsFormat = (room,result) => {
+  //Remove IDs from list of players
+  let players = result.gameLobby.map((lobbyEntry) => {
+    let {playerID, player, ...playerSave} = result.gameDetails.players.find(
+      (element) => element.playerID === lobbyEntry.userId
+    );
+    return {
+      name: lobbyEntry.userName,
+      ...playerSave
+    };
+  });
+
+  let items = result.gameDetails.itemInfo.filter((itemLocation) => itemLocation.itemState && itemLocation.itemState != "concealed");
+
+  let updatedLocations = [...LocationDetails];
+  for (const item of items) {
+    let locationItemIndex = updatedLocations.findIndex((location) => location.name === item.name);
+    updatedLocations[locationItemIndex].item = item.item;
+    updatedLocations[locationItemIndex].itemState = item.itemState;
+  }
+
+  for (let i = 0; i < updatedLocations.length; i++){
+    if(updatedLocations[i].textContent?.length > 2){
+      let itemRevealed = items.find(itemDetails => itemDetails.name === updatedLocations[i].name);
+      if(!itemRevealed){
+        updatedLocations[i].itemState = "concealed";
+      }
+    }
+  }
+
+  let finalFormat = {
+    stage: result.gameDetails.stage,
+    playerTurn: players[result.gameDetails.playerTurn].name,
+    turnPhase: result.gameDetails.turnPhase,
+    deputies: result.gameDetails.deputies,
+    dissentTrack: result.gameDetails.dissentTrack,
+    players: players,
+    items: items,
+    locations: updatedLocations
+  };
+
+  io.in(room).emit('startup', finalFormat);
+};
+
+//Implement DICE ROLL
+const DiceRoll = (amount) => {
+  let dieResults = [];
+  if(amount <= 10 && amount > 0) {
+    for(let i = 0; i < amount;  i++) 
+        {
+            dieResults.push(Math.floor(Math.random() * 6)+1);
+        }
+    } else {
+        dieResults.push(Math.floor(Math.random() * 6)+1);
+    }
+    return dieResults;
+}
+
+const gameStream = Game.watch();
 
 gameStream.on("change", (change) => {
   if(change.operationType === "update"){
@@ -109,8 +168,30 @@ gameStream.on("change", (change) => {
 
     console.log(`Game ${updatedGameId} updated, notifying players...`);
     console.log(`Game change ${change}`);
+
+    Game.findById(updatedGameId).then((updatedGame) => {
+      if(updatedGame) {
+
+        gameCache.set(updatedGameId, updatedGame);
+        //io.to(updatedGameId.toString()).emit("game_updated", updatedGame);
+        detailsFormat(updatedGameId.toString(), updatedGame);
+      }
+    })
   };
-}); */
+});
+
+const checkCache = (GameId) => {
+  let retrievedGame = gameCache.get(GameId);
+  if(!retrievedGame){
+    Game.findById(GameId).then((databaseGame) => {
+      if(databaseGame){
+        gameCache.set(GameId, databaseGame);
+        retrievedGame = databaseGame;
+      }
+    })
+  }
+  return retrievedGame;
+}
 
 io.on("connection", async (socket) => {
 
@@ -137,54 +218,22 @@ io.on("connection", async (socket) => {
     console.log('TestSOCK WORKS');
   })
 
-  const detailsFormat = (room,result) => {
-    //Remove IDs from list of players
-    let players = result.gameLobby.map((lobbyEntry) => {
-      let {playerID, player, ...playerSave} = result.gameDetails.players.find(
-        (element) => element.playerID === lobbyEntry.userId
-      );
-      return {
-        name: lobbyEntry.userName,
-        ...playerSave
-      };
-    });
-
-    let items = result.gameDetails.itemInfo.filter((itemLocation) => itemLocation.itemState && itemLocation.itemState != "concealed");
-
-    let updatedLocations = [...LocationDetails];
-    for (const item of items) {
-      let locationItemIndex = updatedLocations.findIndex((location) => location.name === item.name);
-      updatedLocations[locationItemIndex].item = item.item;
-      updatedLocations[locationItemIndex].itemState = item.itemState;
-    }
-
-    for (let i = 0; i < updatedLocations.length; i++){
-      if(updatedLocations[i].textContent?.length > 2){
-        let itemRevealed = items.find(itemDetails => itemDetails.name === updatedLocations[i].name);
-        if(!itemRevealed){
-          updatedLocations[i].itemState = "concealed";
-        }
-      }
-    }
-
-    let finalFormat = {
-      stage: result.gameDetails.stage,
-      turnPhase: result.gameDetails.turnPhase,
-      deputies: result.gameDetails.deputies,
-      dissentTrack: result.gameDetails.dissentTrack,
-      players: players,
-      items: items,
-      locations: updatedLocations
-    };
-
-    io.in(room).emit('startup', finalFormat);
-  } 
+//Details Format Original Position
 
   socket.on('joinRoom', async (room) => {
     console.log("NEW CODE");
     if(room){
         socket.join(room);
         console.log(`Socket ${socket.id} joined room ${room}`);
+
+
+        let gameroom = gameCache.get(room);
+
+        if(!gameroom) {
+          gameroom = await Game.findById(room);
+          if (!gameroom) return;
+          gameCache.set(room, gameroom);
+        };
 
       //Update lobby for people in lobby.
       await Game.findById(room).then(result => 
@@ -360,7 +409,8 @@ io.on("connection", async (socket) => {
     //io.to(room).emit('selections', updatedGame.gameDetails)
   });
 
-  socket.on('movePlayer', async ({room, newPos}) => {
+  socket.on('movePlayer', async ({room, newPos}) => {   
+
     //console.log(newPos.location.id);
     console.log(newPos.id);
     //const location = LocationDetails.find(locationDetail => locationDetail.id == newPos.location.id);
@@ -382,13 +432,29 @@ io.on("connection", async (socket) => {
         io.in(room).emit('move', moveResult);
         //io.in(room).emit('move', );
       }).catch((error)=> console.error(error));
-      io.to(room).emit('message', `new Position: ${JSON.stringify(location)}`);
+      /* io.to(room).emit('message', `new Position: ${JSON.stringify(location)}`); */
       
     }
     //io.to(room).emit('message', `new Position: ${newPos}`);
     
     //console.log(LocationDetails.find(locationDetail => locationDetail.id == newPos.location.id));
   });
+
+  socket.on('conspire', async ({room}) => {
+
+    let gameroom = checkCache(room);
+
+    /* let gameroom = gameCache.get(room); */
+    let gamePlayerDetailsIndex = gameroom.gameDetails.players.findIndex((player) => player.playerID == session.userId); 
+    let gamePlayerDetails = gameroom.gameDetails.players[gamePlayerDetailsIndex];
+
+    if (gamePlayerDetails.conspired || gamePlayerDetailsIndex == gameroom.gameDetails.playerTurn){
+
+      socket.emit
+      return;
+    }
+
+  })
 
 
   socket.on('disconnect', async () => {
@@ -555,10 +621,13 @@ io.on("connection", async (socket) => {
         updatedGame.gameLobby.forEach(async player => {
           console.log("[GUNNO] - forEach - player:", player.userId);
 
+          let gamePlayerDetailsIndex = updatedGame.gameDetails.players.findIndex(playerDetail => playerDetail.playerID === player.userId); 
+
           
-          if(updatedGame.gameDetails.players.find(playerDetail => playerDetail.playerID === player.userId)) {
-             
-            console.log(`${player.userId}'s has an account:`, updatedGame.gameDetails.players.find(playerDetail => playerDetail.playerID === player.userId));
+          if(gamePlayerDetailsIndex !== -1) {
+            let currentGamePlayerDetails = updatedGame.gameDetails.players[gamePlayerDetailsIndex];
+
+            console.log(`${player.userId}'s has an account:`, currentGamePlayerDetails);
               await Game.updateOne({_id: room, "gameDetails.players.userId": player.userId},
                 {$set: { "gameDetails.players.$.character" : characters[player.character]}},
               ).then((result) => {
@@ -569,7 +638,8 @@ io.on("connection", async (socket) => {
 
               const detailSave = {
                 playerID: player.userId,
-                player: await User.findById(player.userId).select("username"), // Do I really want to be accessing User here? Maybe feed it via frontend instead?
+                name: player.userName,
+                //player: await User.findById(player.userId).select("username"), // Do I really want to be accessing User here? Maybe feed it via frontend instead?
                 motivation: "timid",
                 suspicion: "medium",
                 items: [],
@@ -621,20 +691,6 @@ io.on("connection", async (socket) => {
   
 });
 
-  socket.on('conspire', async ({room, amount})=> {
-    let dieResults = [];
-    if(amount <= 10 && amount > 0) {
-      for(let i = 0; i < amount;  i++) 
-          {
-              dieResults.push(Math.floor(Math.random() * 6)+1);
-          }
-      } else {
-          dieResults.push(Math.floor(Math.random() * 6)+1);
-      }
-      
-
-  })
-  
 
   setInterval(async () => {
     
