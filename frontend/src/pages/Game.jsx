@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
+import React, { useState, useEffect, useMemo, useContext, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 
 import { MapInteractionCSS } from "react-map-interaction";
 
+import Modal from "../components/Modal";
 import Location from "../components/game_components/Location";
 //import PlayerStore from "../stores/PlayerStore";
 import shuffle from "../stores/shuffle";
@@ -45,6 +46,7 @@ const Game = () => {
     const navigate = useNavigate();  
     //const location = useLocation();
     const {state} = useLocation();
+    const errorDialog = useRef();
     
     
       const {user} = useContext(UserContext);
@@ -63,6 +65,7 @@ const Game = () => {
         scale: 0.5,
         translation: {x: 0, y:0}
     });
+    const [error, setError] = useState();
 
     const dice = useDice();
 
@@ -143,7 +146,11 @@ const Game = () => {
           //let replacePlayers = moveResults.map((player))
           console.log("updatePlayers",updatePlayers);
           console.log("moveResults", moveResults);
-      } }
+      } },
+      {event: "error", callback: (errorMessage) => {
+        setError(errorMessage);
+        errorDialog.current.showModal()
+      }}
     ]);
 
     useEffect(()=>{ 
@@ -236,13 +243,13 @@ const Game = () => {
       };
 
       const conspire = (amount) => {
-        let validatedAmount = (amount <= 3 && amount > 0) ? amount : 0;
+        emit('conspire', {room: state.gameId});
+/*         let validatedAmount = (amount <= 3 && amount > 0) ? amount : 0;
 
         let newActionCount = actionCount - validatedAmount;
         let newDissentTrack = dissent;
 
         console.log("IM CONSPIRING");
-        //setConspiring(true);
         let rolls = [...dice.rollDice2(amount)];
         setDiceRolls([...rolls]);
         for(let i = 0; i < rolls.length; i++)
@@ -266,7 +273,7 @@ const Game = () => {
           }
         
         setActionCount(newActionCount);
-        setDissent(newDissentTrack);
+        setDissent(newDissentTrack); */
       }
 
       const locationPlayerRequest = (newLocation) => {
@@ -407,6 +414,9 @@ const Game = () => {
       
 
   return (<div className={classes.background}>
+     <Modal ref={errorDialog}>
+            <p>{error}</p>
+          </Modal>
     <PlayerHUD destinations={player.playerDestinations} currentLocation={player.playerLocation} suspicion={player.suspicion} actions={actionCount} stage={stage[0][0]} inventory={player.playerInventory} dissent={dissent} message={message} messages={messages} setMessage={setMessage} sendMessage={sendMessage} player={player} user={user}/>
     <MapInteractionCSS  value={mapState} onChange={mapHandler} maxScale={0.5}  minScale={0.3}  translationBounds={{xMin:((0 - ((2420 / 1.2)*mapState.scale))/* 0 - (mapState.scale * 1000) */), xMax:(window.innerWidth - (1000 * mapState.scale) /* 0 + (mapState.scale * 2420) */), yMin:(0 - (mapState.scale * 1000)), yMax: (0 + (mapState.scale * 1000)) }}>
         <div className={classes.board}>

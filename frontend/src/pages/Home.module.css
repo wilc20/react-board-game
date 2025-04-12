@@ -57,6 +57,16 @@
    /*  background-color: aqua; */
 }
 
+dialog {
+    margin: auto;
+}
+
+dialog form {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5%;
+}
+
 @media (max-width: 919px) {
 
     .lobby {

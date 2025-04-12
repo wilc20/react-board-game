@@ -132,9 +132,12 @@ const detailsFormat = (room,result) => {
     }
   }
 
+  console.log(`detailsFormat_players: ${players} and detailsFormat_playerTurn: ${result.gameDetails.playerTurn}`);
+  console.log(`detailsFormat_playerTurn: ${JSON.stringify(players[result.gameDetails.playerTurn]["name"])}`);
+
   let finalFormat = {
     stage: result.gameDetails.stage,
-    playerTurn: players[result.gameDetails.playerTurn].name,
+    playerTurn: players[result.gameDetails.playerTurn]["name"],
     turnPhase: result.gameDetails.turnPhase,
     deputies: result.gameDetails.deputies,
     dissentTrack: result.gameDetails.dissentTrack,
@@ -448,11 +451,12 @@ io.on("connection", async (socket) => {
     let gamePlayerDetailsIndex = gameroom.gameDetails.players.findIndex((player) => player.playerID == session.userId); 
     let gamePlayerDetails = gameroom.gameDetails.players[gamePlayerDetailsIndex];
 
-    if (gamePlayerDetails.conspired || gamePlayerDetailsIndex == gameroom.gameDetails.playerTurn){
+  /*   if (gamePlayerDetails.conspired || gamePlayerDetailsIndex == gameroom.gameDetails.playerTurn){
 
-      socket.emit
+      socket.emit('error', 'Hello');
       return;
-    }
+    } */
+    socket.emit('error', 'gamePlayerDetails :'+ JSON.stringify(gamePlayerDetails));
 
   })
 
@@ -690,6 +694,10 @@ io.on("connection", async (socket) => {
   
   
 });
+
+  socket.on('removePlayer', async ({room, playerToBeRemoved}) => {
+
+  })
 
 
   setInterval(async () => {
