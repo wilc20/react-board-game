@@ -47,10 +47,10 @@ router.post("/newGame", async (req, res) => {
     locationItemsSet = locationItemsSet.map(({id, neighbours, textContent, lat, lng, zone, ...rest}) => {return {...rest}});
 
     const defaultDetails = {
-        title: title,
+      title: title,
       stage: 1,
       eventCard: 1,
-      playerTurn: 1,
+      playerTurn: 0,
       turnPhase: 1,
       players: [
 /*         {
@@ -138,8 +138,10 @@ router.post('/joingame', async (req, res) => {
         {
           playerID: req.session.userId,
           name: req.session.username,
+          conspired: false,
+          actions: 3,
           motivation: "timid",
-          suspicion: "medium",
+          suspicion: 2,
           items: [],
           dossier: [],
           location: LocationDetails[0],
@@ -154,7 +156,7 @@ router.post('/joingame', async (req, res) => {
       let defaultPlayer = {
         player: req.session.username,
         motivation: "timid",
-        suspicion: "medium",
+        suspicion: 2,
         items: [],
         dossier: [],
         location: 'Train Station',

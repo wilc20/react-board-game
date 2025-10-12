@@ -103,6 +103,10 @@ const activeUsers = new Set();
 const gameCache = new Map();
 
 const detailsFormat = (room,result) => {
+  if(result.gameDetails.players.length == undefined|| result.gameDetails.players.length == 0){
+    return;
+  }
+
   //Remove IDs from list of players
   let players = result.gameLobby.map((lobbyEntry) => {
     let {playerID, player, ...playerSave} = result.gameDetails.players.find(
@@ -163,37 +167,73 @@ const DiceRoll = (amount) => {
     return dieResults;
 }
 
-const gameStream = Game.watch();
+//const gameStream = Game.watch();
+const gameStream = Game.watch(
+  [
+    {$match: { operationType: "update" }}
+  ],
+  { fullDocument: "updateLookup" }
+);
 
 gameStream.on("change", (change) => {
-  if(change.operationType === "update"){
-    const updatedGameId = change.documentKey._id;
+  const id = change.documentKey._id.toString();
+  const doc = change.fullDocument;
 
-    console.log(`Game ${updatedGameId} updated, notifying players...`);
-    console.log(`Game change ${change}`);
-
-    Game.findById(updatedGameId).then((updatedGame) => {
-      if(updatedGame) {
-
-        gameCache.set(updatedGameId, updatedGame);
-        //io.to(updatedGameId.toString()).emit("game_updated", updatedGame);
-        detailsFormat(updatedGameId.toString(), updatedGame);
-      }
-    })
-  };
+  //console.log("onChange:"+JSON.stringify(doc));
+  console.log("onChange_ID:"+id);
+  gameCache.set(id, doc);
+  //io.to(id).emit("game_updated", doc);
+  detailsFormat(id, doc);
 });
 
-const checkCache = (GameId) => {
-  let retrievedGame = gameCache.get(GameId);
-  if(!retrievedGame){
-    Game.findById(GameId).then((databaseGame) => {
-      if(databaseGame){
-        gameCache.set(GameId, databaseGame);
-        retrievedGame = databaseGame;
-      }
-    })
+// gameStream.on("change", (change) => {
+//   if(change.operationType === "update"){
+//     const updatedGameId = change.documentKey._id;
+
+//     console.log(`Game ${updatedGameId} updated, notifying players...`);
+//     console.log(`Game change ${JSON.stringify(change)}`);
+
+//     Game.findById(updatedGameId).then((updatedGame) => {
+//       if(updatedGame && updatedGame.gameDetails.players.length > 0 && updatedGame.gameLobby.length > 0) {
+
+//         gameCache.set(updatedGameId, updatedGame);
+//         //io.to(updatedGameId.toString()).emit("game_updated", updatedGame);
+//         detailsFormat(updatedGameId.toString(), updatedGame);
+//       }
+//     })
+//   };
+// });
+
+// const checkCache = (GameId) => {
+//   let retrievedGame = gameCache.get(GameId);
+//   if(!retrievedGame){
+//     Game.findById(GameId).then((databaseGame) => {
+//       if(databaseGame){
+//         gameCache.set(GameId, databaseGame);
+//         retrievedGame = databaseGame;
+//       }
+//     })
+//   }
+//   return retrievedGame;
+// }
+
+const checkCache = async (GameId) => {
+  console.log(`checkCache__Room argument: ${GameId}`);
+
+  let cachedGame = gameCache.get(GameId);
+ 
+  if (cachedGame){
+     console.log(`checkCache__retrieved: ${JSON.stringify(cachedGame)}`);
+     return cachedGame;
+    }
+
+  const dbGame = await Game.findById(GameId).lean();
+  if(dbGame) {
+    console.log(`checkCache__set: ${dbGame}`);  
+    gameCache.Set(GameId, dbGame);
   }
-  return retrievedGame;
+  console.log(`checkCache__set_return: ${dbGame}`);  
+  return dbGame;
 }
 
 io.on("connection", async (socket) => {
@@ -356,6 +396,9 @@ io.on("connection", async (socket) => {
           items: items
         };
 
+        console.log(`gameSetup-filteredPlayers${JSON.stringify(players)}`);
+        console.log(`gameSetup-finalResult: ${JSON.stringify(finalResults)}`);
+
         //console.log("detailsFormat", detailsFormat(result));
 
         //console.log("TransmutedResults gameStart", finalResults);
@@ -414,24 +457,37 @@ io.on("connection", async (socket) => {
 
   socket.on('movePlayer', async ({room, newPos}) => {   
 
-    //console.log(newPos.location.id);
-    console.log(newPos.id);
-    //const location = LocationDetails.find(locationDetail => locationDetail.id == newPos.location.id);
+      console.log(`On Move Player__Room argument: ${room}`);
+
+    let gameroom = await checkCache(room);
+    
+    console.log(`New position: ${JSON.stringify(newPos)}`);
+    
+    //Find if location exists
     const location = LocationDetails.find(locationDetail => locationDetail.id == newPos.id);
     if(location){
+
+      //Check if new position is among the player's positions neighbours
+      //if(gameroom.gameDetails.players.playersId)
+      console.log(`On Move Player__GameDetails_players: ${JSON.stringify(gameroom.gameDetails.players)}`);
+      const player = gameroom.gameDetails.players.find(player => player.playerID == session.userId);
+       if(!player.location.neighbours.includes(location.name)){
+         socket.emit('error', 'Target location does not neighbour your current position.');
+         return;
+       };
+        console.log(`On Move Player__GameDetails_players: ${JSON.stringify(gameroom.gameDetails.players)}`);
       await Game.findOneAndUpdate({_id:room, "gameDetails.players.playerID" : session.userId},
         {$set: { "gameDetails.players.$.location" : location}},
         {new: true}
       ).then((result) => {
         console.log(`${session.username} location updated: ${location.id}`);
         let moveResult = result.gameDetails.players.map(
-          ({ playerID, player, ...rest }) => {
-            let { _id, username } = player;
-            return { name: username, ...rest };
+          ({ playerID, ...rest }) => {
+            return { ...rest };
           }
         );
 
-        console.log(moveResult);
+        //console.log(moveResult);
         io.in(room).emit('move', moveResult);
         //io.in(room).emit('move', );
       }).catch((error)=> console.error(error));
@@ -443,20 +499,117 @@ io.on("connection", async (socket) => {
     //console.log(LocationDetails.find(locationDetail => locationDetail.id == newPos.location.id));
   });
 
-  socket.on('conspire', async ({room}) => {
+  socket.on('conspire', async ({room, amount}) => {
 
-    let gameroom = checkCache(room);
-
+    let gameroom = await checkCache(room);
+    console.log('conspiring');
     /* let gameroom = gameCache.get(room); */
     let gamePlayerDetailsIndex = gameroom.gameDetails.players.findIndex((player) => player.playerID == session.userId); 
-    let gamePlayerDetails = gameroom.gameDetails.players[gamePlayerDetailsIndex];
+    //Consider creating copy of object, so I can safely edit it.
+    let gamePlayerDetails = {...gameroom.gameDetails.players[gamePlayerDetailsIndex]};
+    console.log(`${gamePlayerDetails.name}`);
+
+    if (gamePlayerDetails.conspired){
+      socket.emit('error', 'You have already conspired this turn!');
+      return;
+    }
+
+    if(gamePlayerDetails.actions < 1){
+      socket.emit('error', 'You are out of actions.');
+      return;
+    }
+
+    if(amount > gamePlayerDetails.actions){
+       console.log(`${gamePlayerDetails.name} is out of rolls`);
+      socket.emit('error', 'You do not have enough actions for this many rolls.');
+      return;
+    }
+
+
+    let conspireResults = DiceRoll(amount);
+    gamePlayerDetails.actions -= amount;
+    let dissentTrack = gameroom.gameDetails.dissentTrack;
+
+    let dissentModifier = 0;
+    let actionCountModifier = 0;
+    let suspicionModifier = 0;
+
+    for(resultNum in conspireResults){
+      console.log(`${gamePlayerDetails.name} suspicion: ${gamePlayerDetails.suspicion}`);
+
+      switch(resultNum){
+        case 6:
+          //gamePlayerDetails.suspicion++;
+          suspicionModifier++;
+          break;
+        case 5:
+        case 4:
+            dissentModifier++;
+          break;
+        default: 
+          //gamePlayerDetails.actions += resultNum;
+          actionCountModifier += resultNum
+      }
+    }
+
+    const options = {
+      new: true,
+      runValidators: true
+    }
+
+
+
+    
+
+    if(dissentTrack > 2){
+      // Somehow prompt player to make a choice
+      // Maybe have boolean that says player currently choosing
+      // Alternatively have a string that dictates players current state: jailed/dissenting/conspiring etc..
+      // and the other socket checks that string, to stop players abusing it.
+      socket.emit('dissentEvent')
+
+    }
+
+    
+
+    //socket.emit('error',DiceRoll(amount));
+
+    // await Game.findOneAndUpdate({_id:room, "gameDetails.players.playerID" : session.userId},
+    //   {$set: { "gameDetails.players.$" : gamePlayerDetails}},
+    //   {new: true}
+    // )
+
+    await Game.findOneAndUpdate(
+      {_id: room},
+      {$inc: {"gameDetails.dissentTrack": dissentModifier, "gameDetails.players.$[p].actions": actionCountModifier, "gameDetails.players.$[p].actions":suspicionModifier}
+      }
+    )
+    
+    
+
+/* 
+    await Game.findOneAndUpdate({_id:room, "gameDetails.players.playerID" : session.userId},
+      {$set: { "gameDetails.players.$.location" : location}},
+      {new: true}
+    ).then((result) => {
+      console.log(`${session.username} location updated: ${location.id}`);
+      let moveResult = result.gameDetails.players.map(
+        ({ playerID, player, ...rest }) => {
+          let { _id, username } = player;
+          return { name: username, ...rest };
+        }
+      );
+    }).catch((error)=> console.error(error));  */
+    //socket.emit('error', 'gamePlayerDetails :'+ JSON.stringify(gamePlayerDetails));
+
+    
 
   /*   if (gamePlayerDetails.conspired || gamePlayerDetailsIndex == gameroom.gameDetails.playerTurn){
 
       socket.emit('error', 'Hello');
       return;
     } */
-    socket.emit('error', 'gamePlayerDetails :'+ JSON.stringify(gamePlayerDetails));
+    
 
   })
 
@@ -644,8 +797,10 @@ io.on("connection", async (socket) => {
                 playerID: player.userId,
                 name: player.userName,
                 //player: await User.findById(player.userId).select("username"), // Do I really want to be accessing User here? Maybe feed it via frontend instead?
+                conspired: false,
+                actions: 3,
                 motivation: "timid",
-                suspicion: "medium",
+                suspicion: 2,
                 items: [],
                 dossier: [],
                 location: LocationDetails[0],

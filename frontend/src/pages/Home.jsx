@@ -3,6 +3,7 @@ import { redirect, useOutletContext } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 //import { UserContext, useUserContext } from "../context/userContext";
 
+import { AuthContext } from "../context/AuthProvider";
 
 import LobbyEntry from "../components/LobbyEntry";
 import classes from "./Home.module.css";
@@ -10,7 +11,7 @@ import List from "../components/List";
 import axios from "axios";
 import Modal from "../components/Modal";
 //import { useUser } from "../context/userContext";
-import { UserContext } from "../App";
+//import { UserContext } from "../App";
 
 const fetchGames = async (gamesSetter) => {
   axios
@@ -36,55 +37,18 @@ const Home = () => {
   //const {username} = useOutletContext();
   //const {user} = useContext(UserContext);
   //const { username } = useUser();
-  const { user, setUser } = useContext(UserContext);
+  //const { user, setUser } = useContext(UserContext);
+  const { user, logout } = useContext(AuthContext);
+
 
   useEffect(() => {
     console.log("useEffect");
-/*     const fetchGames = async () => {
-      axios
-        .get("http://localhost:8801/api/game/gamelist", {
-          withCredentials: true,
-        })
-        .then((res) => {
-          console.log(res.data);
-          setGames([...res.data]);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }; */
-
-/*     const fetchUser = async () => {
-      console.log("inside async");
-      axios
-        .get("http://localhost:8801/api/auth/profile", {
-          withCredentials: true,
-        })
-        .then((res) => {
-          console.log(JSON.stringify(res));
-          fetchGames();
-        })
-        .catch((err) => {
-          console.error(err);
-          navigate("/login");
-        });
-    }; */
-
 
     fetchGames(setGames);
   }, []);
 
   const handleLogout = async () => {
-    axios
-      .delete("http://localhost:8801/api/auth/logout", {
-        withCredentials: true,
-        credentials: "include",
-      })
-      .then((res) => {
-        console.log(res);
-        navigate('/login');
-      })
-      .catch((err) => console.error(err));
+    logout();
   };
 
   const handleCreate = async () => {
@@ -162,22 +126,6 @@ const Home = () => {
               />
             ))}
         </List>
-        {/*         <ul className={classes["lobby-list"]}>
-         {['1','2','3','4','5','6','7','8'].map((e) => <LobbyEntry
-            key={"e"+e}
-            name="
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sit amet fringilla velit. 
-                Donec tincidunt mauris in neque interdum vestibulum quis vel nunc. Nam tempus velit id 
-                leo vestibulum ullamcorper. Proin dapibus tempus libero vel condimentum. Pellentesque 
-                congue turpis a lorem malesuada, vel euismod nisi sodales. Vivamus lobortis consectetur 
-                velit at dictum. Maecenas ac justo sit amet nunc commodo porttitor. Sed eleifend sceler
-                isque hendrerit."
-            open={true}
-            joinSession={(sessionname) => {
-              console.log("Joining: ", sessionname);
-            }}
-          />)}
-        </ul> */}
         <button className={classes.create} onClick={handleLogout}>
           Logout
         </button>

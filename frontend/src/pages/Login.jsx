@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import classes from "./Login.module.css";
 import { useNavigate, redirect, useOutletContext } from "react-router-dom";
 import axios from "axios";
-import { UserContext } from "../App";
+//import { UserContext } from "../App";
 /* import axiosInstance from "../axiosConfig"; */
 //import { useUser } from "../context/userContext";
+import { AuthContext } from "../context/AuthProvider";
 
 const Login = () => {
 
@@ -13,7 +14,7 @@ const Login = () => {
   //const {setUsername} = useOutletContext();
   //const {setUser, userChangeHandler} = useContext(UserContext);
   //const { setUsername, username } = useUser();
-  const {user, setUser } = useContext(UserContext);
+  const {login, user} = useContext(AuthContext);
 
   const [values, setValues] = useState({
     username: '',
@@ -30,12 +31,19 @@ const handleInput = (event) => {
     } */
     const testSubmit = async (event) => {
       event.preventDefault();
-      axios.post('http://localhost:8801/api/auth/login', values, {withCredentials: true, credentials: 'include'})
+      let loginAttempt = await login(values);
+      //login.then((res) => {if(res.success){navigate('/')}});
+      console.log('loginAttempt:',loginAttempt);
+      if(loginAttempt.success){
+        console.log('success');
+        navigate('/');
+      }
+/*       axios.post('http://localhost:8801/api/auth/login', values, {withCredentials: true, credentials: 'include'})
       .then(res => {console.log(JSON.stringify(res)); setUser('fred');  navigate('/'); })
-      .catch(err => console.log(err)); 
+      .catch(err => console.log(err));  */
 
-      
-      //redirect('/');
+      //await login(values)
+      //navigate('/');
     }
 
   return (

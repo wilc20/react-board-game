@@ -87,9 +87,7 @@ router.get("/logout", async (req, res) => {
         res.status(200).send('Logout successful');
     }); */
 });
-router.delete("/logout", async (req, res) => {
-
-
+router.post("/logout", async (req, res) => {
 
     if(req.session) {
 
@@ -110,46 +108,8 @@ router.delete("/logout", async (req, res) => {
         console.log('No session exists');
         res.end();
     }
- /*  console.log("logout sessions", req.session.userId);
-  session.store.destroy(req.session.id); */
-/*   req.session.userId = null;
-  req.session.save(function (err) {
-    if (err)  return res.status(500).send('Could not log out.');
-    req.session.regenerate(function (err) {
-      if (err)  return res.status(500).send('Could not log out.');
-      res.clearCookie('connect.sid');
-      res.status(200).send('Logout successful');
-    });
-  }); */
-  /*     req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).send('Could not log out.');
-        }
-        res.clearCookie('connect.sid'); // Optional: clear the cookie from the client side
-        res.status(200).send('Logout successful');
-    }); */
 });
 
-/* router.post('/logout', (req, res) => {
-    const sessionId = req.session.userId;
-    console.log('logout', req.session);
-    req.session.store.destroy(sessionId, (err2) => {
-        if(err2){
-            console.log('Error destroying session in store:', err2);
-        } else {
-            console.log('Session destroyed in store');
-        }
-    })
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).send('Could not log out.');
-        }
-        res.clearCookie('connect.sid'); // Optional: clear the cookie from the client side
-
-        res.status(200).send('Logout successful');
-    });
-});
- */
 
 /* router.post('/logout', (req, res, next) => {
     console.log('Session to destroy:', req.session.userId);

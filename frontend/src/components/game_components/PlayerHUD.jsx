@@ -68,10 +68,14 @@ const PlayerHUD = ({
   setMessage,
   sendMessage,
   player,
-  user
+  user,
+  players
 }) => {
   //const player = PlayerStore();
   const [showDossier, setShowDossier] = useState(false);
+
+  console.log("WTF MAN");
+  console.log(players);
 
   const dissentTrackHUD = () => {
     let dissentDice = [];
@@ -92,6 +96,22 @@ const PlayerHUD = ({
     <div className={ClassStyle.overlay}>
       <div className={ClassStyle.dissent}>
         {dissentTrackHUD()}
+                {players?.filter(p => p.name !== user).map((pEntry, index) => (
+                        //<li key={"player-"+index}>{pEntry.name+': '+pEntry.location.name} </li>
+                        <li key={"player-"+index}> 
+                          <div>
+                            <p>{pEntry.name}</p>
+                            <p>{pEntry.character.name}</p>
+                            <p>{pEntry.character.section}</p>
+                            <p>{`Motivation: ${pEntry.motivation}`}</p>
+                            <p>{`Suspicion: ${pEntry.suspicion}`}</p>
+                            <p>{`Items: ${JSON.stringify(pEntry.items)}`}</p>
+                            <p>{`Dossier: ${JSON.stringify(pEntry.dossier)}`}</p>
+                            <p>{`Location: ${pEntry.location.name}`}</p>
+                            {/* <p>{`${JSON.stringify(pEntry)}`}</p> */}
+                          </div>
+                        </li>
+                    ))}
 {/*           <div className={ClassStyle.dissent_dice}>
             <img src={diceTarget}/>
           </div>
