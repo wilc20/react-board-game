@@ -74,6 +74,10 @@ const PlayerHUD = ({
   //const player = PlayerStore();
   const [showDossier, setShowDossier] = useState(false);
 
+<<<<<<< HEAD
+=======
+  console.log("WTF MAN");
+>>>>>>> 393bbfffbef01574d9fefd47015a4730eff53f5a
   console.log(players);
 
   const dissentTrackHUD = () => {
