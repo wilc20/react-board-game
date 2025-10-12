@@ -22,7 +22,9 @@ import axios from "axios";
 
 import classes from "./Game.module.css";
 
-import { UserContext } from "../App";
+//import { UserContext } from "../App";
+//import { UserProvider } from "../context/userContext";
+import { AuthContext } from "../context/AuthProvider";
 
 import { useLocation } from "react-router-dom";
 
@@ -38,18 +40,19 @@ import { usePlayerState } from "../hooks/usePlayerState";
 const Game = () => {
 
     const [players, setPlayers] = useState([
-        { name: "Dave", color: "green", location: LocationDetails[13]},
-        { name: "Mary", color: "red", location: LocationDetails[20] },
-        { name: "Chaz", color: "blue", location: LocationDetails[22] },
+        { name: "Dave", color: "green", location: LocationDetails[13], items:[], dossier:[], suspicion: 3, character: {name: "Dietrich Bonhoeffer", section: "ABWEHR", itemLimit: 4}},
+        { name: "Mary", color: "red", location: LocationDetails[20], items:[], dossier:[], suspicion: 3, character: {name: "Hening Von Tresckow", section: "WERMACHT", itemLimit: 4} },
+        { name: "Chaz", color: "blue", location: LocationDetails[22], items:[], dossier:[], suspicion: 3, character: {name: "Carl Goerdeler", section: "CIVILIAN", itemLimit: 4} },
       ]);
 
     const navigate = useNavigate();  
     //const location = useLocation();
     const {state} = useLocation();
     const errorDialog = useRef();
+    const eventDialog = useRef();
     
     
-      const {user} = useContext(UserContext);
+      const {user} = useContext(AuthContext);
       console.log('U S E R', user);
     const player = usePlayerState(user);
     //const player = PlayerStore();
@@ -66,6 +69,7 @@ const Game = () => {
         translation: {x: 0, y:0}
     });
     const [error, setError] = useState();
+    const [gameEvent, setGameEvent] = useState();
 
     const dice = useDice();
 
@@ -89,7 +93,7 @@ const Game = () => {
         playerRelocateHandler(myDetails.location, user); // Dictates which locations I can click on
         setPlayers(gameDetails.players); // Dictates which names are placed where
 /*         player.motivationChange(myDetails.motivation);*/
-        player.suspicionChange(3); 
+        player.suspicionChange(myDetails.character.suspicion); 
         console.log('myDetailsItem',myDetails.items);
         player.setPlayerInventoryLimit(myDetails.character.itemLimit);
         player.setPlayerInventory(myDetails.items);
@@ -150,6 +154,21 @@ const Game = () => {
       {event: "error", callback: (errorMessage) => {
         setError(errorMessage);
         errorDialog.current.showModal()
+      }},
+      {event: "dissentEvent", callback: () => {
+
+        let dissentSetup = {
+          title: "GameEventTitle",
+          buttons: [],
+          fire: (selection) => {console.log(selection)}
+        }
+
+        for (const player in players) {
+          dissentSetup.buttons.push(player);
+        }
+
+        setGameEvent(dissentSetup);
+        eventDialog.current.showModal();
       }}
     ]);
 
@@ -243,7 +262,7 @@ const Game = () => {
       };
 
       const conspire = (amount) => {
-        emit('conspire', {room: state.gameId});
+        emit('conspire', {room: state.gameId, amount});
 /*         let validatedAmount = (amount <= 3 && amount > 0) ? amount : 0;
 
         let newActionCount = actionCount - validatedAmount;
@@ -410,14 +429,30 @@ const Game = () => {
       };
 
 
+      let currentEvent = (
+        <div>
+          <h1>Placeholder Title</h1>
+          {players.forEach(player => {
+            <button>player.name</button>
+          })}
+          <button>Lower Military Support</button>
+        </div>
+      );
 
-      
+      let eventContents = ( gameEvent ? (<div className="">
+           {gameEvent.title}
+           {gameEvent.buttons.map(choice => <button onClick={gameEvent.fire(choice)}>{choice}</button>)}
+        </div>)
+       : <div><h1>Placeholder</h1></div>);
 
   return (<div className={classes.background}>
+      <Modal ref={eventDialog}>
+            {eventContents}
+      </Modal>
      <Modal ref={errorDialog}>
             <p>{error}</p>
-          </Modal>
-    <PlayerHUD destinations={player.playerDestinations} currentLocation={player.playerLocation} suspicion={player.suspicion} actions={actionCount} stage={stage[0][0]} inventory={player.playerInventory} dissent={dissent} message={message} messages={messages} setMessage={setMessage} sendMessage={sendMessage} player={player} user={user}/>
+      </Modal>
+    <PlayerHUD destinations={player.playerDestinations} currentLocation={player.playerLocation} suspicion={player.suspicion} actions={actionCount} stage={stage[0][0]} inventory={player.playerInventory} dissent={dissent} message={message} messages={messages} setMessage={setMessage} sendMessage={sendMessage} player={player} user={user} players={players} />
     <MapInteractionCSS  value={mapState} onChange={mapHandler} maxScale={0.5}  minScale={0.3}  translationBounds={{xMin:((0 - ((2420 / 1.2)*mapState.scale))/* 0 - (mapState.scale * 1000) */), xMax:(window.innerWidth - (1000 * mapState.scale) /* 0 + (mapState.scale * 2420) */), yMin:(0 - (mapState.scale * 1000)), yMax: (0 + (mapState.scale * 1000)) }}>
         <div className={classes.board}>
             <div className={classes.map}>
@@ -436,7 +471,8 @@ const Game = () => {
                         <li key={"msg-"+index}>{msg.chatter ? msg.chatter+': '+msg.message : msg}</li>
                     ))} */}
         {players?.map((pEntry, index) => (
-                        <li key={"player-"+index}>{pEntry.name+': '+pEntry.location.name}</li>
+                        //<li key={"player-"+index}>{pEntry.name+': '+pEntry.location.name} </li>
+                        <li key={"player-"+index}>{JSON.stringify(pEntry)} </li>
                     ))}
         </ul>
     </MapInteractionCSS>

@@ -10,109 +10,30 @@ import Register from "./pages/Register";
 import Game from "./pages/Game";
 import Lobby from "./pages/Lobby";
 //import GameLayout from "./layouts/GameLayout";
-import AuthLayout from "./layouts/AuthLayout";
+//import AuthLayout from "./layouts/AuthLayout";
 
 import { checkAuthLoader } from "./util/auth";
 import RootLayout from "./layouts/RootLayout";
 import ErrorPage from "./pages/ErrorPage";
-//import { UserProvider } from "./context/userContext";
-
-export const UserContext = React.createContext(null);
-
-console.log()
-
-const router = createBrowserRouter([
-  {
-    element: <RootLayout/>,
-    children:[
-      {
-        path:'/',
-        element: <AuthLayout />,
-        id:'root',
-        loader: checkAuthLoader,
-        children:[
-          {index: true, element: <Home />},
-          {
-            path: 'game',
-            element:  <Lobby key={"something"}/>,
-          },
-          {
-            path: 'gameBoard',
-            element: <Game />
-          } 
-        ]
-      },
-      {
-        path:'/login',
-        element: <Login />,
-        id:'login'
-      }
-    ]
-  }
-  
-])
+import ProtectedRoutes from "./components/ProtectedRoutes";
+import Testpage from "./pages/Testpage";
 
 function App() {
-  const [user, setUser] = useState(null);
-
-/*   const routes = useRoutes([
-    { 
-      element:<AuthLayout />,
-      loader: checkAuthLoader,
-      children: [
-        {path: "/",element: <Home />},
-        {
-          element: <GameLayout />,
-          children: [
-            {
-              path: "/game",
-              element: <Game />
-            },
-            {
-              path: "/lobby/:state",
-              element: <Lobby />
-            }
-          ]
-        },
-      ]
-    },
-    {
-      path: "/login",
-      element: <Login />
-    },
-    {
-      path: "/register",
-      element: <Register />
-    },
-    
-    
-  ])
-  return routes; */
   return (
-    <BrowserRouter>
-      <UserContext.Provider value={{user:user, setUser: setUser}}>
         <Routes>
-          {/* Root Layout */}
-          <Route path="/" element={<RootLayout />}>
-            {/* Auth Layout */}
-            <Route
-              element={<AuthLayout />}
-            >
-               <Route index element={<Home />} />
+          <Route element={<RootLayout />}>
+          <Route element={<ProtectedRoutes />}>
+            <Route index path="/"  element={<Home />} />
               <Route path="game" element={<Lobby />} />
               <Route path="gameBoard" element={<Game />} />
-              </Route>
+          </Route>
             {/* Login Route */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register/>}/>
+            <Route path='/testpage' element={<Testpage />} />
           </Route>
         </Routes>
-      </UserContext.Provider>
-    </BrowserRouter>
   );
-/*   return <UserProvider>
-    <RouterProvider router={router} />
-  </UserProvider>; */
 }
 
 export default App;

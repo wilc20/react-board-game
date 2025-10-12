@@ -14,7 +14,9 @@ import axios from "axios";
 import classes from "./Lobby.module.css";
 
 //import { useUser } from "../context/userContext";
-import { UserContext } from "../App";
+//import { UserContext } from "../App";
+import { UserProvider } from '../context/userContext';
+import { AuthContext } from '../context/AuthProvider';
 
 const charNames = ['General Ludgwig Beck','Dietrich Bonhoeffer', 'Admiral Wilhelm Canaris', 'Carl Goerdeler','Erich Kordt', 'General Friedrich Olbricht', 'General Hans Oster', 'Claus Von Stauffenberg', 'Henning Von Tresckow'];
 
@@ -30,7 +32,7 @@ const Lobby = () => {
   const gameId = state.gameId;
   const navigate = useNavigate();
   //const { username } = useUser();
-  const {user} = useContext(UserContext)
+  const {user} = useContext(AuthContext)
   //const {playerList, gameId} = useOutletContext();
   const [playerList, setPlayerList] = useState([]);
 

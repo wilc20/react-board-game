@@ -25,11 +25,6 @@
     
   }
   
-  .shithead {
-    position: absolute;
-    z-index: 0;
-  }
-  
    .map {
   /*   display: flex;
     flex-wrap: wrap;
