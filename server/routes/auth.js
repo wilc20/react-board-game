@@ -64,9 +64,15 @@ router.post("/login", async function (req, res) {
 });
 
 router.get("/profile", async (req, res) => {
-  console.log("profile sessions userid", req.session.userId);
-  console.log("profile sessions", req.session);
-  if (!req.session.userId) {
+
+    console.log("PROFILE start");
+  console.log("cookie:", req.headers.cookie);
+  console.log("sessionID:", req.sessionID);
+  console.log("userId:", req.session?.userId);
+
+  //console.log("profile sessions userid", req.session.userId);
+  //console.log("profile sessions", req.session);
+  if (!req.session?.userId) {
     return res.status(401).send("Unauthorized");
   }
   try {
@@ -89,25 +95,54 @@ router.get("/logout", async (req, res) => {
 });
 router.post("/logout", async (req, res) => {
 
-    if(req.session) {
+    console.log("LOGOUT start");
+  console.log("cookie:", req.headers.cookie);
+  console.log("sessionID:", req.sessionID);
+  console.log("userId:", req.session?.userId);
 
-      await Game.updateMany(
-        { 'gameLobby.userId': req.session.userId},
-        { $pull: { gameLobby: {userId: req.session.userId}}},
+   if (!req.session?.userId) return res.status(200).send("Already logged out");
+
+  const userId = req.session.userId;
+
+  if (userId) {
+          await Game.updateMany(
+        { 'gameLobby.userId': userId},
+        { $pull: { gameLobby: {userId}}},
       );
+  }
 
-        req.session.destroy(err => {
-            if(err) {
-                res.status(400).send('Unable to log out.');
-            } else {
-                res.clearCookie('connect.sid');
-                res.send('Logout successful.');
-            }
-        });
-    } else {
-        console.log('No session exists');
-        res.end();
-    }
+  //Clear auth data immediately
+  req.session.userid = null;
+
+  req.session.save(()=>{
+    req.session.destroy(err => {
+      if (err) return res.status(400).send("Unable to log out.");
+
+      // MUST match cookie options used when setting it.
+      res.clearCookie("connect.sid", {path: "/"});
+      res.status(200).send("Logout successful.");
+    });
+  });
+
+    // if(req.session) {
+
+    //   await Game.updateMany(
+    //     { 'gameLobby.userId': req.session.userId},
+    //     { $pull: { gameLobby: {userId: req.session.userId}}},
+    //   );
+
+    //     req.session.destroy(err => {
+    //         if(err) {
+    //             res.status(400).send('Unable to log out.');
+    //         } else {
+    //             res.clearCookie('connect.sid');
+    //             res.send('Logout successful.');
+    //         }
+    //     });
+    // } else {
+    //     console.log('No session exists');
+    //     res.end();
+    // }
 });
 
 

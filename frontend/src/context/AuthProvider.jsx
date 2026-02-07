@@ -32,11 +32,12 @@ export function AuthProvider({ children }) {
             }
     };
 
-    const logout = () => {
-        axios.post('http://localhost:8801/api/auth/logout', {
+    const logout = async () => {
+        await axios.post('http://localhost:8801/api/auth/logout', {},{
             withCredentials: true,
-            credentials: "include",
-          })
+           // credentials: "include",
+          });
+        SetUser(null);
     };
 
     const register = (values) => {

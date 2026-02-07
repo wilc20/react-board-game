@@ -103,9 +103,15 @@ const activeUsers = new Set();
 const gameCache = new Map();
 
 const detailsFormat = (room,result) => {
-  if(result.gameDetails.players.length == undefined|| result.gameDetails.players.length == 0){
+  // If there are no player details to be retrieved  or no players in the lobby skip.
+  if(
+    !Array.isArray(result.gameDetails?.players)|| 
+    result.gameDetails.players.length === 0 ||
+    !Array.isArray(result.gameLobby) || 
+    result.gameLobby.length === 0
+  ){
     return;
-  }
+  } 
 
   //Remove IDs from list of players
   let players = result.gameLobby.map((lobbyEntry) => {
@@ -117,6 +123,8 @@ const detailsFormat = (room,result) => {
       ...playerSave
     };
   });
+
+
 
   let items = result.gameDetails.itemInfo.filter((itemLocation) => itemLocation.itemState && itemLocation.itemState != "concealed");
 
@@ -136,8 +144,11 @@ const detailsFormat = (room,result) => {
     }
   }
 
+
+
   console.log(`detailsFormat_players: ${players} and detailsFormat_playerTurn: ${result.gameDetails.playerTurn}`);
   console.log(`detailsFormat_playerTurn: ${JSON.stringify(players[result.gameDetails.playerTurn]["name"])}`);
+
 
   let finalFormat = {
     stage: result.gameDetails.stage,
@@ -154,10 +165,10 @@ const detailsFormat = (room,result) => {
 };
 
 //Implement DICE ROLL
-const DiceRoll = (amount) => {
+const DiceRoll = (diceCount) => {
   let dieResults = [];
-  if(amount <= 10 && amount > 0) {
-    for(let i = 0; i < amount;  i++) 
+  if(diceCount <= 10 && diceCount > 0) {
+    for(let i = 0; i < diceCount;  i++) 
         {
             dieResults.push(Math.floor(Math.random() * 6)+1);
         }
@@ -499,7 +510,7 @@ io.on("connection", async (socket) => {
     //console.log(LocationDetails.find(locationDetail => locationDetail.id == newPos.location.id));
   });
 
-  socket.on('conspire', async ({room, amount}) => {
+  socket.on('conspire', async ({room, diceCount}) => {
 
     let gameroom = await checkCache(room);
     console.log('conspiring');
@@ -519,15 +530,15 @@ io.on("connection", async (socket) => {
       return;
     }
 
-    if(amount > gamePlayerDetails.actions){
+    if(diceCount > gamePlayerDetails.actions){
        console.log(`${gamePlayerDetails.name} is out of rolls`);
       socket.emit('error', 'You do not have enough actions for this many rolls.');
       return;
     }
 
 
-    let conspireResults = DiceRoll(amount);
-    gamePlayerDetails.actions -= amount;
+    let conspireResults = DiceRoll(diceCount);
+    gamePlayerDetails.actions -= diceCount;
     let dissentTrack = gameroom.gameDetails.dissentTrack;
 
     let dissentModifier = 0;
@@ -572,7 +583,7 @@ io.on("connection", async (socket) => {
 
     
 
-    //socket.emit('error',DiceRoll(amount));
+    //socket.emit('error',DiceRoll(diceCount));
 
     // await Game.findOneAndUpdate({_id:room, "gameDetails.players.playerID" : session.userId},
     //   {$set: { "gameDetails.players.$" : gamePlayerDetails}},
@@ -714,6 +725,10 @@ io.on("connection", async (socket) => {
 /*     const currentGame = await Game.findById(room);
     console.log('[Leave Session] - Game', currentGame); */
     console.log('A user left game:', session.username);
+
+     //let gameroom = await checkCache(room);
+
+
 
     //disconnect(room);
     await Game.findOneAndUpdate(
